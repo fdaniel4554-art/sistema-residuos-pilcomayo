@@ -1,0 +1,49 @@
+{
+  "name": "residuos-backend",
+  "version": "1.0.0",
+  "description": "Backend API para Sistema de Gestión de Residuos Sólidos - Pilcomayo",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "node prisma/seed.js",
+    "prisma:reset": "prisma migrate reset --force",
+    "db:push": "prisma db push",
+    "init": "chmod +x scripts/*.sh && ./scripts/init.sh npm run dev"
+  },
+  "keywords": [
+    "residuos",
+    "waste-management",
+    "api",
+    "express"
+  ],
+  "author": "Municipalidad de Pilcomayo",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.7.0",
+    "axios": "^1.6.2",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.41.3",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "minio": "^7.1.3",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "redis": "^4.6.11",
+    "socket.io": "^4.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "prisma": "^5.7.0"
+  }
+}

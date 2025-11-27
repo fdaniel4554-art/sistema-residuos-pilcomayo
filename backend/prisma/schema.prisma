@@ -1,0 +1,222 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// MODELO DE USUARIOS
+// ==========================================
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(CITIZEN)
+  phone     String?
+  active    Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  incidents     Incident[]
+  assignments   Assignment[]
+  activityLogs  ActivityLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  BRIGADE
+  DRIVER
+  CITIZEN
+}
+
+// ==========================================
+// MODELO DE INCIDENCIAS
+// ==========================================
+model Incident {
+  id          String          @id @default(uuid())
+  description String
+  latitude    Float
+  longitude   Float
+  address     String?
+  imageUrl    String?
+  
+  // Clasificación manual
+  wasteType   WasteType?
+  severity    SeverityLevel?
+  
+  // Clasificación IA
+  aiWasteType     String?
+  aiSeverity      String?
+  aiConfidence    Float?
+  aiPriority      Int?           @default(0)
+  
+  status      IncidentStatus  @default(PENDING)
+  
+  reportedById String
+  reportedBy   User           @relation(fields: [reportedById], references: [id])
+  
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  resolvedAt  DateTime?
+
+  // Relaciones
+  assignments     Assignment[]
+  statusHistory   StatusHistory[]
+  activityLogs    ActivityLog[]
+
+  @@map("incidents")
+  @@index([status])
+  @@index([createdAt])
+  @@index([latitude, longitude])
+}
+
+enum WasteType {
+  ORGANIC
+  PLASTIC
+  PAPER
+  CONSTRUCTION
+  METAL
+  MIXED
+  CRITICAL_POINT
+}
+
+enum SeverityLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum IncidentStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+// ==========================================
+// MODELO DE ASIGNACIONES
+// ==========================================
+model Assignment {
+  id          String   @id @default(uuid())
+  
+  incidentId  String
+  incident    Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  
+  assignedToId String
+  assignedTo   User    @relation(fields: [assignedToId], references: [id])
+  
+  notes       String?
+  beforeImage String?
+  afterImage  String?
+  
+  assignedAt  DateTime @default(now())
+  completedAt DateTime?
+
+  @@map("assignments")
+  @@index([incidentId])
+  @@index([assignedToId])
+}
+
+// ==========================================
+// HISTORIAL DE ESTADOS
+// ==========================================
+model StatusHistory {
+  id         String         @id @default(uuid())
+  
+  incidentId String
+  incident   Incident       @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  
+  oldStatus  IncidentStatus?
+  newStatus  IncidentStatus
+  notes      String?
+  
+  createdAt  DateTime       @default(now())
+
+  @@map("status_history")
+  @@index([incidentId])
+}
+
+// ==========================================
+// LOG DE ACTIVIDADES (Trazabilidad)
+// ==========================================
+model ActivityLog {
+  id          String   @id @default(uuid())
+  
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  incidentId  String?
+  incident    Incident? @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  
+  action      String
+  description String
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json?
+  
+  createdAt   DateTime @default(now())
+
+  @@map("activity_logs")
+  @@index([userId])
+  @@index([incidentId])
+  @@index([createdAt])
+}
+
+// ==========================================
+// MODELO DE EVENTOS EXTERNOS
+// ==========================================
+model ExternalEvent {
+  id                String        @id @default(uuid())
+  type              EventType
+  description       String
+  affectedStreets   String[]      @default([])
+  latitude          Float
+  longitude         Float
+  radius            Int           @default(500) // metros
+  severity          SeverityLevel @default(MEDIUM)
+  active            Boolean       @default(true)
+  
+  startDate         DateTime      @default(now())
+  endDate           DateTime?
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("external_events")
+  @@index([active])
+  @@index([type])
+}
+
+enum EventType {
+  STRIKE          // Paro/Manifestación
+  CONSTRUCTION    // Construcción en vía
+  ACCIDENT        // Accidente
+  WEATHER         // Clima adverso
+  ROAD_CLOSURE    // Cierre de vía
+  OTHER           // Otro
+}
+
+// ==========================================
+// CONFIGURACIÓN DEL SISTEMA
+// ==========================================
+model SystemConfig {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+  
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
+}
