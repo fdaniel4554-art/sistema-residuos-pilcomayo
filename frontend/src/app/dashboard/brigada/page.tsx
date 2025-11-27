@@ -114,14 +114,19 @@ export default function BrigadaDashboard() {
                 return;
             }
 
-            const response = await routesAPI.optimize(pendingTasks);
+            // Usar la primera tarea como punto de partida
+            const startPoint = pendingTasks[0];
+            const response = await routesAPI.optimize(startPoint.latitude, startPoint.longitude);
 
-            if (response.success) {
-                setOptimizedRoute(response.data.optimizedRoute);
-                setRouteSummary(response.data.summary);
+            if (response.data) {
+                setOptimizedRoute(pendingTasks); // Por ahora usar las tareas pendientes
+                setRouteSummary({
+                    totalDistance: 0,
+                    totalTime: 0
+                });
 
                 // 🎤 Confirmación de optimización
-                speak(`Ruta optimizada exitosamente. Distancia total: ${response.data.summary.totalDistance.toFixed(2)} kilómetros. ${response.data.optimizedRoute.length} paradas. Primera parada: ${response.data.optimizedRoute[0]?.address || response.data.optimizedRoute[0]?.description}`);
+                speak(`Ruta configurada con ${pendingTasks.length} paradas`);
             }
         } catch (error) {
             console.error('Error al optimizar ruta:', error);
