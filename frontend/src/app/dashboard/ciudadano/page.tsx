@@ -156,14 +156,14 @@ export default function CiudadanoDashboard() {
 
     return (
         <RoleGuard allowedRoles={['CITIZEN', 'ADMIN']}>
-            <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-green-50">
+            <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
                 {/* Header */}
-                <div className="bg-white shadow">
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                        <h1 className="text-3xl font-bold text-gray-900">
+                <div className="bg-gradient-to-r from-green-600 to-emerald-600 shadow-lg">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        <h1 className="text-4xl font-bold text-white drop-shadow-lg">
                             👤 Bienvenido, {user?.name || 'Ciudadano'}
                         </h1>
-                        <p className="mt-1 text-sm text-gray-600">
+                        <p className="mt-2 text-lg text-green-50">
                             Ayúdanos a mantener limpio nuestro distrito
                         </p>
                     </div>
@@ -171,8 +171,8 @@ export default function CiudadanoDashboard() {
 
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Formulario Principal */}
-                    <div className="bg-white shadow-xl rounded-2xl p-8 mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                    <div className="bg-white shadow-2xl rounded-2xl p-8 mb-8 border border-gray-100">
+                        <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-6">
                             📸 Reportar Problema de Basura
                         </h2>
 
@@ -191,10 +191,10 @@ export default function CiudadanoDashboard() {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Upload de Imagen */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Foto del Problema *
+                                <label className="block text-base font-bold text-gray-900 mb-3">
+                                    📷 Foto del Problema *
                                 </label>
-                                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-green-500 transition-colors">
+                                <div className="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-400 bg-gray-50 hover:bg-green-50 transition-all">
                                     <div className="space-y-1 text-center">
                                         {imagePreview ? (
                                             <div className="relative">
@@ -253,36 +253,36 @@ export default function CiudadanoDashboard() {
 
                             {/* Ubicación */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-base font-bold text-gray-900 mb-3">
                                     📍 Tu Ubicación *
                                 </label>
-                                <div className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-300">
+                                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-4 py-4 rounded-xl border-2 border-blue-200">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-700">
+                                        <span className="text-base text-gray-900 font-medium">
                                             {address || 'Obteniendo ubicación...'}
                                         </span>
                                         <button
                                             type="button"
                                             onClick={getLocation}
-                                            className="text-green-600 hover:text-green-700 text-sm font-medium"
+                                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-bold transition-colors shadow-md"
                                         >
-                                            Actualizar
+                                            🔄 Actualizar
                                         </button>
                                     </div>
                                 </div>
-                                <p className="mt-1 text-xs text-gray-500">
+                                <p className="mt-2 text-sm text-gray-700 font-medium">
                                     ✓ Ubicación detectada automáticamente
                                 </p>
                             </div>
 
                             {/* Comentario Opcional */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-base font-bold text-gray-900 mb-3">
                                     💬 Comentario (Opcional)
                                 </label>
                                 <textarea
-                                    rows={3}
-                                    className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500"
+                                    rows={4}
+                                    className="mt-1 block w-full px-4 py-4 text-gray-900 bg-gray-50 border-2 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
                                     placeholder="Agrega detalles adicionales si lo deseas..."
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
@@ -314,7 +314,7 @@ export default function CiudadanoDashboard() {
                             <button
                                 type="submit"
                                 disabled={submitting || !selectedImage || !location}
-                                className="w-full flex justify-center items-center gap-2 py-4 px-6 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="w-full flex justify-center items-center gap-2 py-4 px-6 border border-transparent rounded-xl shadow-lg text-lg font-bold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95"
                             >
                                 {submitting ? (
                                     <>
@@ -334,8 +334,8 @@ export default function CiudadanoDashboard() {
                     </div>
 
                     {/* Mis Reportes */}
-                    <div className="bg-white shadow-xl rounded-2xl p-8">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                    <div className="bg-white shadow-2xl rounded-2xl p-8 border border-gray-100">
+                        <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-6">
                             📋 Mis Reportes Recientes
                         </h2>
 
