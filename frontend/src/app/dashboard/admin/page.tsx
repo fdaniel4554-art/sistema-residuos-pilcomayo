@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import RoleGuard from '@/components/RoleGuard';
+import AnimatedBackground from '@/components/AnimatedBackground';
 
 interface User {
     id: string;
@@ -132,7 +133,8 @@ export default function AdminDashboard() {
 
     return (
         <RoleGuard allowedRoles={['ADMIN']}>
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative">
+                <AnimatedBackground />
                 {/* Header */}
                 <div className="bg-white shadow-lg">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
