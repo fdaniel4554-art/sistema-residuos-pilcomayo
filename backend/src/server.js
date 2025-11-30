@@ -15,41 +15,10 @@ app.use(helmet());
 app.use(cors());
 app.use(compression());
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ==========================================
-// RUTAS
-// ==========================================
-const authRoutes = require('./routes/auth.routes');
-const incidentRoutes = require('./routes/incident.routes');
-const userRoutes = require('./routes/user.routes');
-const statsRoutes = require('./routes/stats.routes');
-const uploadRoutes = require('./routes/upload.routes');
-const routeRoutes = require('./routes/route.routes');
-const eventRoutes = require('./routes/event.routes');
-const reportRoutes = require('./routes/report.routes');
-const analyticsRoutes = require('./routes/analytics.routes');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/incidents', incidentRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/stats', statsRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/routes', routeRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/analytics', analyticsRoutes);
-
-// ==========================================
-// RUTA DE SALUD
-// ==========================================
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
+status: 'OK',
+  timestamp: new Date().toISOString(),
     service: 'Backend API',
-    version: '1.0.0'
+      version: '1.0.0'
   });
 });
 
