@@ -6,8 +6,8 @@ import RoleGuard from '@/components/RoleGuard';
 import VoiceAssistant from '@/components/VoiceAssistant';
 import { useSpeech } from '@/hooks/useSpeech';
 import Link from 'next/link';
-import { routesAPI } from '@/lib/api';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import { routesAPI } from '@/lib/api';
 
 interface Incident {
     id: string;
@@ -171,6 +171,20 @@ export default function BrigadaDashboard() {
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
                     <p className="mt-4 text-gray-600">Cargando tareas...</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <RoleGuard allowedRoles={['BRIGADE', 'DRIVER', 'ADMIN']}>
+            <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-green-50 relative">
+                <AnimatedBackground />
+                {/* 🎤 Asistente de Voz */}
+                <VoiceAssistant />
+
+                {/* Header */}
+                <div className="bg-white shadow-lg">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                         <div className="flex items-center justify-between">
                             <div>
@@ -419,6 +433,6 @@ export default function BrigadaDashboard() {
                     </div>
                 </div>
             </div>
-        </RoleGuard >
+        </RoleGuard>
     );
-    }
+}
