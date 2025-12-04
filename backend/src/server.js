@@ -15,10 +15,43 @@ app.use(helmet());
 app.use(cors());
 app.use(compression());
 app.use(morgan('dev'));
-status: 'OK',
-  timestamp: new Date().toISOString(),
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ==========================================
+// RUTAS
+// ==========================================
+const authRoutes = require('./routes/auth.routes');
+const incidentRoutes = require('./routes/incident.routes');
+const userRoutes = require('./routes/user.routes');
+const statsRoutes = require('./routes/stats.routes');
+const uploadRoutes = require('./routes/upload.routes');
+const routeRoutes = require('./routes/route.routes');
+const eventRoutes = require('./routes/event.routes');
+const reportRoutes = require('./routes/report.routes');
+const analyticsRoutes = require('./routes/analytics.routes');
+const seedRoutes = require('./routes/seed.routes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/incidents', incidentRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/routes', routeRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/seed', seedRoutes);
+
+// ==========================================
+// RUTA DE SALUD
+// ==========================================
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
     service: 'Backend API',
-      version: '1.0.0'
+    version: '1.0.0'
   });
 });
 
@@ -39,7 +72,8 @@ app.get('/', (req, res) => {
       routes: '/api/routes',
       events: '/api/events',
       reports: '/api/reports',
-      analytics: '/api/analytics'
+      analytics: '/api/analytics',
+      seed: '/api/seed'
     }
   });
 });
@@ -83,6 +117,7 @@ app.listen(PORT, '0.0.0.0', () => {
 ║     GET  /api/incidents                              ║
 ║     POST /api/incidents                              ║
 ║     GET  /api/stats                                  ║
+║     POST /api/seed/users (CREAR USUARIOS)            ║
 ║                                                       ║
 ║  🔧 Modo: ${process.env.NODE_ENV || 'development'}                        ║
 ╚═══════════════════════════════════════════════════════╝
