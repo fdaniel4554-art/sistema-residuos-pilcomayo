@@ -40,7 +40,7 @@ const seedUsers = async (req, res) => {
                 name: 'Administrador Municipal',
                 role: 'ADMIN',
                 phone: '964123456',
-                isActive: true
+                active: true
             }
         });
         users.push({ email: admin.email, role: admin.role });
@@ -53,7 +53,7 @@ const seedUsers = async (req, res) => {
                 name: 'Juan Pérez - Brigada Norte',
                 role: 'BRIGADE',
                 phone: '964123457',
-                isActive: true
+                active: true
             }
         });
         users.push({ email: brigade1.email, role: brigade1.role });
@@ -66,7 +66,7 @@ const seedUsers = async (req, res) => {
                 name: 'María García - Brigada Sur',
                 role: 'BRIGADE',
                 phone: '964123458',
-                isActive: true
+                active: true
             }
         });
         users.push({ email: brigade2.email, role: brigade2.role });
@@ -79,7 +79,7 @@ const seedUsers = async (req, res) => {
                 name: 'Carlos Rodríguez - Chofer',
                 role: 'DRIVER',
                 phone: '964123459',
-                isActive: true
+                active: true
             }
         });
         users.push({ email: driver.email, role: driver.role });
@@ -92,7 +92,7 @@ const seedUsers = async (req, res) => {
                 name: 'Ana López',
                 role: 'CITIZEN',
                 phone: '964123460',
-                isActive: true
+                active: true
             }
         });
         users.push({ email: citizen.email, role: citizen.role });
