@@ -130,7 +130,7 @@ export default function ReportPage() {
                     </p>
                 </div>
 
-                {/* Form Card */} }
+                {/* Form Card */}
                 <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 border border-gray-100">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
