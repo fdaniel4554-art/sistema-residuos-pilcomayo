@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const incidentController = require('../controllers/incident.controller');
+const assignmentController = require('../controllers/assignment.controller');
 const { authMiddleware, roleMiddleware } = require('../middlewares/auth.middleware');
 
 // Todas las rutas requieren autenticación
@@ -25,6 +26,12 @@ router.put('/:id/status',
 router.post('/:id/assign',
     roleMiddleware('ADMIN'),
     incidentController.assignIncident
+);
+
+// AUTO-ASIGNAR INCIDENTES (TEMPORAL - Solo para pruebas)
+router.post('/auto-assign/brigade',
+    roleMiddleware('ADMIN'),
+    assignmentController.autoAssignIncidents
 );
 
 // Eliminar incidencia (solo admin)
