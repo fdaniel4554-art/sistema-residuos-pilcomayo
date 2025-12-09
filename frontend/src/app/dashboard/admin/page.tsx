@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import RoleGuard from '@/components/RoleGuard';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import { usersAPI, incidentsAPI, statsAPI } from '@/lib/api';
 
 interface User {
     id: string;
@@ -71,24 +72,18 @@ export default function AdminDashboard() {
 
     const loadData = async () => {
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-            console.log('🔍 Loading data from:', apiUrl);
+            console.log('🔍 Loading data...');
 
+            // Use the API helpers instead of raw fetch
             const [usersRes, incidentsRes, statsRes] = await Promise.all([
-                fetch(`${apiUrl}/api/users`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`${apiUrl}/api/incidents`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`${apiUrl}/api/stats/general`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
+                usersAPI.getAll(),
+                incidentsAPI.getAll(),
+                statsAPI.getGeneral()
             ]);
 
-            const usersData = await usersRes.json();
-            const incidentsData = await incidentsRes.json();
-            const statsData = await statsRes.json();
+            const usersData = usersRes.data;
+            const incidentsData = incidentsRes.data;
+            const statsData = statsRes.data;
 
             console.log('👥 Users loaded:', usersData);
             console.log('📋 Incidents loaded:', incidentsData);
