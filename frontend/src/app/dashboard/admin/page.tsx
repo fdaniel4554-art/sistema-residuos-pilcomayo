@@ -72,6 +72,8 @@ export default function AdminDashboard() {
     const loadData = async () => {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+            console.log('🔍 Loading data from:', apiUrl);
+
             const [usersRes, incidentsRes, statsRes] = await Promise.all([
                 fetch(`${apiUrl}/api/users`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -88,6 +90,22 @@ export default function AdminDashboard() {
             const incidentsData = await incidentsRes.json();
             const statsData = await statsRes.json();
 
+            console.log('👥 Users loaded:', usersData);
+            console.log('📋 Incidents loaded:', incidentsData);
+            console.log('📊 Stats loaded:', statsData);
+
+            // Log user roles to debug
+            if (Array.isArray(usersData)) {
+                console.log('🔍 User roles found:', usersData.map(u => ({ name: u.name, role: u.role })));
+                console.log('📊 Role counts:', {
+                    BRIGADE: usersData.filter(u => u.role === 'BRIGADE').length,
+                    DRIVER: usersData.filter(u => u.role === 'DRIVER').length,
+                    CITIZEN: usersData.filter(u => u.role === 'CITIZEN').length,
+                    ADMIN: usersData.filter(u => u.role === 'ADMIN').length,
+                    total: usersData.length
+                });
+            }
+
             setUsers(Array.isArray(usersData) ? usersData : []);
             setIncidents(Array.isArray(incidentsData) ? incidentsData : incidentsData.incidents || []);
 
@@ -98,8 +116,10 @@ export default function AdminDashboard() {
                 totalUsers: statsData?.users?.total || 0,
                 activeBrigades: statsData?.users?.brigades || 0
             });
+
+            console.log('✅ Data loaded successfully');
         } catch (error) {
-            console.error('Error loading data:', error);
+            console.error('❌ Error loading data:', error);
         } finally {
             setLoading(false);
         }
