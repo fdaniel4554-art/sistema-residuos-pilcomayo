@@ -122,6 +122,63 @@ export default function AdminDashboard() {
         }
     };
 
+    // Assign incident to brigade
+    const assignIncidentToBrigade = async (incidentId: string, brigadeId: string) => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+            const response = await fetch(`${apiUrl}/api/incidents/${incidentId}/assign`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ brigadeId })
+            });
+
+            if (response.ok) {
+                // Reload data to show updated assignment
+                const loadData = async () => {
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+                    const [usersRes, incidentsRes, statsRes] = await Promise.all([
+                        fetch(`${apiUrl}/api/users`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }),
+                        fetch(`${apiUrl}/api/incidents`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }),
+                        fetch(`${apiUrl}/api/stats/general`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                    ]);
+
+                    const usersData = await usersRes.json();
+                    const incidentsData = await incidentsRes.json();
+                    const statsData = await statsRes.json();
+
+                    setUsers(Array.isArray(usersData) ? usersData : []);
+                    setIncidents(Array.isArray(incidentsData) ? incidentsData : []);
+
+                    setStats({
+                        totalIncidents: statsData?.incidents?.total || 0,
+                        pendingIncidents: statsData?.incidents?.pending || 0,
+                        resolvedIncidents: statsData?.incidents?.resolved || 0,
+                        totalUsers: statsData?.users?.total || 0,
+                        activeBrigades: statsData?.users?.brigades || 0
+                    });
+                };
+                await loadData();
+                alert('Incidente asignado exitosamente');
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Error al asignar incidente');
+            }
+        } catch (error) {
+            console.error('Error assigning incident:', error);
+            alert('Error al asignar incidente');
+        }
+    };
+
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -392,7 +449,7 @@ export default function AdminDashboard() {
                                 <div className="space-y-6">
                                     <h2 className="text-2xl font-bold text-gray-900">Gestión de Incidentes</h2>
                                     <div className="space-y-4">
-                                        {incidents.slice(0, 10).map((incident) => (
+                                        {incidents.slice(0, 10).map((incident: any) => (
                                             <div key={incident.id} className="bg-gray-50 rounded-xl p-4 hover:shadow-md transition-shadow">
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
@@ -403,11 +460,17 @@ export default function AdminDashboard() {
                                                         <p className="text-xs text-gray-500 mt-1">
                                                             {new Date(incident.createdAt).toLocaleDateString('es-PE')}
                                                         </p>
+                                                        {incident.address && (
+                                                            <p className="text-xs text-gray-600 mt-1">
+                                                                📍 {incident.address}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                     <div className="flex flex-col gap-2">
                                                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${incident.status === 'RESOLVED' ? 'bg-green-100 text-green-800' :
                                                             incident.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
-                                                                'bg-yellow-100 text-yellow-800'
+                                                                incident.status === 'ASSIGNED' ? 'bg-purple-100 text-purple-800' :
+                                                                    'bg-yellow-100 text-yellow-800'
                                                             }`}>
                                                             {incident.status}
                                                         </span>
@@ -421,6 +484,34 @@ export default function AdminDashboard() {
                                                         )}
                                                     </div>
                                                 </div>
+
+                                                {/* Asignar a Brigada */}
+                                                {(incident.status === 'PENDING' || incident.status === 'ASSIGNED') && (
+                                                    <div className="mt-4 flex items-center gap-3">
+                                                        <label className="text-sm font-medium text-gray-700">
+                                                            Asignar a:
+                                                        </label>
+                                                        <select
+                                                            onChange={(e) => {
+                                                                if (e.target.value) {
+                                                                    assignIncidentToBrigade(incident.id, e.target.value);
+                                                                }
+                                                            }}
+                                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                                            defaultValue=""
+                                                        >
+                                                            <option value="">Seleccionar brigada...</option>
+                                                            {users
+                                                                .filter((u: User) => u.role === 'BRIGADE' || u.role === 'DRIVER')
+                                                                .map((brigade: User) => (
+                                                                    <option key={brigade.id} value={brigade.id}>
+                                                                        {brigade.name} ({brigade.role})
+                                                                    </option>
+                                                                ))
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
