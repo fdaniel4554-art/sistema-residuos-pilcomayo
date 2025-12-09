@@ -31,6 +31,7 @@ const eventRoutes = require('./routes/event.routes');
 const reportRoutes = require('./routes/report.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const seedRoutes = require('./routes/seed.routes');
+const brigadeLocationRoutes = require('./routes/brigadeLocation.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/incidents', incidentRoutes);
@@ -42,6 +43,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/seed', seedRoutes);
+app.use('/api/brigades', brigadeLocationRoutes);
 
 // ==========================================
 // RUTA DE SALUD
