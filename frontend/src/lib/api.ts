@@ -145,3 +145,36 @@ export const routesAPI = {
         api.get('/api/routes/optimize', { params: { latitude, longitude } }),
 };
 
+
+// ==========================================
+// BRIGADE LOCATION
+// ==========================================
+export const brigadeLocationAPI = {
+    // Para brigadas - actualizar ubicación
+    updateLocation: (data: {
+        latitude: number;
+        longitude: number;
+        accuracy?: number;
+        speed?: number;
+        heading?: number;
+        currentIncidentId?: string;
+    }) => api.post('/api/brigades/location', data),
+
+    // Para brigadas - desactivar compartir ubicación
+    deactivateLocation: () =>
+        api.post('/api/brigades/location/deactivate'),
+
+    // Para admin - obtener todas las ubicaciones activas
+    getAllLocations: () =>
+        api.get('/api/brigades/locations'),
+
+    // Para admin - obtener ubicación de brigada específica
+    getBrigadeLocation: (brigadeId: string) =>
+        api.get(/api/brigades/${brigadeId}/location`),
+
+    // Para admin - buscar brigadas cercanas
+    getNearbyBrigades: (latitude: number, longitude: number, maxDistance: number = 5000) =>
+        api.get('/api/brigades/nearby', {
+            params: { latitude, longitude, maxDistance }
+        }),
+};

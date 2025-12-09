@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import RoleGuard from '@/components/RoleGuard';
 import { CreateUserModal, ChangePasswordModal } from '@/components/AdminModals';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import BrigadeTrackingMap from '@/components/BrigadeTrackingMap';
 import { usersAPI, incidentsAPI, statsAPI } from '@/lib/api';
 
 interface User {
@@ -41,7 +42,7 @@ interface Stats {
 
 export default function AdminDashboard() {
     const { token } = useAuthStore();
-    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'incidents'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'incidents' | 'tracking'>('overview');
     const [users, setUsers] = useState<User[]>([]);
     const [incidents, setIncidents] = useState<Incident[]>([]);
     const [stats, setStats] = useState<Stats>({
@@ -171,8 +172,19 @@ export default function AdminDashboard() {
     };
 
     const assignIncidentToBrigade = async (incidentId: string, brigadeId: string) => {
+        if (!brigadeId) return;
+
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+            // Mostrar estado de carga temporalmente (idealmente usar un toast)
+            const prevIncidents = [...incidents];
+            setIncidents(incidents.map(inc =>
+                inc.id === incidentId
+                    ? { ...inc, status: 'ASSIGNED' } // Optimistic update
+                    : inc
+            ));
+
             const response = await fetch(`${apiUrl}/api/incidents/${incidentId}/assign`, {
                 method: 'POST',
                 headers: {
@@ -183,11 +195,18 @@ export default function AdminDashboard() {
             });
 
             if (response.ok) {
-                loadData();
+                await loadData(); // Recargar datos reales
                 alert('Incidente asignado exitosamente');
+            } else {
+                // Revertir si hay error
+                setIncidents(prevIncidents);
+                const errorData = await response.json();
+                alert(`Error al asignar: ${errorData.error || 'Error desconocido'}`);
             }
         } catch (error) {
             console.error('Error assigning incident:', error);
+            alert('Error de conexión al asignar incidente');
+            loadData(); // Revertir cambios
         }
     };
 
@@ -343,10 +362,19 @@ export default function AdminDashboard() {
                                 onClick={loadData}
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Actualizar
+                                {loading ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                        Actualizando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Actualizar
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -457,10 +485,29 @@ export default function AdminDashboard() {
                                 >
                                     📋 Incidentes ({incidents.length})
                                 </button>
+                                <button
+                                    onClick={() => setActiveTab('tracking')}
+                                    className={`${activeTab === 'tracking'
+                                        ? 'border-blue-500 text-blue-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+                                >
+                                    🗺️ Rastreo en Vivo
+                                </button>
                             </nav>
                         </div>
 
                         <div className="mt-6">
+                            {/* Tracking Tab */}
+                            {activeTab === 'tracking' && (
+                                <div className="space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <h2 className="text-2xl font-bold text-gray-900">Rastreo de Brigadas en Tiempo Real</h2>
+                                    </div>
+                                    <BrigadeTrackingMap />
+                                </div>
+                            )}
+
                             {/* Overview Tab */}
                             {activeTab === 'overview' && (
                                 <div className="space-y-6">
@@ -844,18 +891,22 @@ export default function AdminDashboard() {
                                                             <select
                                                                 onChange={(e) => {
                                                                     if (e.target.value) {
-                                                                        assignIncidentToBrigade(incident.id, e.target.value);
+                                                                        const confirmAssign = window.confirm('¿Estás seguro de asignar este incidente a esta brigada?');
+                                                                        if (confirmAssign) {
+                                                                            assignIncidentToBrigade(incident.id, e.target.value);
+                                                                        }
+                                                                        e.target.value = ''; // Reset select
                                                                     }
                                                                 }}
-                                                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm max-w-[200px]"
                                                                 defaultValue=""
                                                             >
-                                                                <option value="">Asignar brigada...</option>
+                                                                <option value="" disabled>Asignar brigada...</option>
                                                                 {users
                                                                     .filter((u: User) => u.role === 'BRIGADE' || u.role === 'DRIVER')
                                                                     .map((brigade: User) => (
                                                                         <option key={brigade.id} value={brigade.id}>
-                                                                            {brigade.name}
+                                                                            {brigade.name} {brigade.active ? '🟢' : '🔴'}
                                                                         </option>
                                                                     ))
                                                                 }

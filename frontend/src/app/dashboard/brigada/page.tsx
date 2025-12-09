@@ -7,6 +7,7 @@ import VoiceAssistant from '@/components/VoiceAssistant';
 import { useSpeech } from '@/hooks/useSpeech';
 import Link from 'next/link';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import LocationSharing from '@/components/LocationSharing';
 import { routesAPI } from '@/lib/api';
 
 interface Incident {
@@ -165,6 +166,8 @@ export default function BrigadaDashboard() {
         }
     };
 
+    const currentIncident = tasks.find(t => t.status === 'IN_PROGRESS');
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -232,7 +235,10 @@ export default function BrigadaDashboard() {
                     </div>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+                    {/* Location Sharing */}
+                    <LocationSharing currentIncidentId={currentIncident?.id} />
+
                     {/* Route Summary */}
                     {routeSummary && (
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-2xl p-6 mb-6 shadow-xl">
