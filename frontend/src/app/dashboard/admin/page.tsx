@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import RoleGuard from '@/components/RoleGuard';
+import { CreateUserModal, ChangePasswordModal } from '@/components/AdminModals';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { usersAPI, incidentsAPI, statsAPI } from '@/lib/api';
 
@@ -1086,6 +1087,36 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
+
+                {/* Create User Modal */}
+                <CreateUserModal
+                    show={showCreateUserModal}
+                    onClose={() => {
+                        setShowCreateUserModal(false);
+                        setFormErrors('');
+                        setCreateUserForm({ name: '', email: '', password: '', role: 'CITIZEN', phone: '' });
+                    }}
+                    onCreate={createUser}
+                    form={createUserForm}
+                    setForm={setCreateUserForm}
+                    errors={formErrors}
+                />
+
+                {/* Change Password Modal */}
+                <ChangePasswordModal
+                    show={showChangePasswordModal}
+                    onClose={() => {
+                        setShowChangePasswordModal(false);
+                        setFormErrors('');
+                        setChangePasswordForm({ newPassword: '', confirmPassword: '' });
+                    }}
+                    onChange={changePassword}
+                    userName={selectedUser?.name || ''}
+                    form={changePasswordForm}
+                    setForm={setChangePasswordForm}
+                    errors={formErrors}
+                />
+
                 {/* Delete Confirmation Modal */}
                 {showDeleteConfirm && itemToDelete && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1125,3 +1156,5 @@ export default function AdminDashboard() {
         </RoleGuard>
     );
 }
+
+
