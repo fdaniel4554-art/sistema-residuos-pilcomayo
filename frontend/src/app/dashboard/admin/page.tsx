@@ -60,11 +60,16 @@ export default function AdminDashboard() {
     const [showUserModal, setShowUserModal] = useState(false);
     const [showIncidentModal, setShowIncidentModal] = useState(false);
     const [showEditUserModal, setShowEditUserModal] = useState(false);
+    const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+    const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<{ type: 'user' | 'incident', id: string } | null>(null);
 
     // Edit forms
     const [editUserForm, setEditUserForm] = useState({ name: '', email: '', role: '' });
+    const [createUserForm, setCreateUserForm] = useState({ name: '', email: '', password: '', role: 'CITIZEN', phone: '' });
+    const [changePasswordForm, setChangePasswordForm] = useState({ newPassword: '', confirmPassword: '' });
+    const [formErrors, setFormErrors] = useState<string>('');
 
     useEffect(() => {
         loadData();
@@ -219,22 +224,62 @@ export default function AdminDashboard() {
         if (!selectedUser) return;
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-            const response = await fetch(`${apiUrl}/api/users/${selectedUser.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(editUserForm)
-            });
-
-            if (response.ok) {
-                loadData();
-                setShowEditUserModal(false);
-            }
-        } catch (error) {
+            await usersAPI.update(selectedUser.id, editUserForm);
+            loadData();
+            setShowEditUserModal(false);
+            setFormErrors('');
+        } catch (error: any) {
             console.error('Error updating user:', error);
+            setFormErrors(error.response?.data?.error || 'Error al actualizar usuario');
+        }
+    };
+
+    const createUser = async () => {
+        // Validate form
+        if (!createUserForm.name || !createUserForm.email || !createUserForm.password) {
+            setFormErrors('Todos los campos son requeridos');
+            return;
+        }
+
+        if (createUserForm.password.length < 6) {
+            setFormErrors('La contraseña debe tener al menos 6 caracteres');
+            return;
+        }
+
+        try {
+            await usersAPI.create(createUserForm);
+            loadData();
+            setShowCreateUserModal(false);
+            setCreateUserForm({ name: '', email: '', password: '', role: 'CITIZEN', phone: '' });
+            setFormErrors('');
+        } catch (error: any) {
+            console.error('Error creating user:', error);
+            setFormErrors(error.response?.data?.error || 'Error al crear usuario');
+        }
+    };
+
+    const changePassword = async () => {
+        if (!selectedUser) return;
+
+        if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
+            setFormErrors('Las contraseñas no coinciden');
+            return;
+        }
+
+        if (changePasswordForm.newPassword.length < 6) {
+            setFormErrors('La contraseña debe tener al menos 6 caracteres');
+            return;
+        }
+
+        try {
+            await usersAPI.update(selectedUser.id, { password: changePasswordForm.newPassword });
+            setShowChangePasswordModal(false);
+            setChangePasswordForm({ newPassword: '', confirmPassword: '' });
+            setFormErrors('');
+            alert('Contraseña actualizada exitosamente');
+        } catch (error: any) {
+            console.error('Error changing password:', error);
+            setFormErrors(error.response?.data?.error || 'Error al cambiar contraseña');
         }
     };
 
