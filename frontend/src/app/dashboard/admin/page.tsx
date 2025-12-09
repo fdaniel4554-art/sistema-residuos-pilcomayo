@@ -81,8 +81,11 @@ export default function AdminDashboard() {
                 statsAPI.getGeneral()
             ]);
 
-            const usersData = usersRes.data;
-            const incidentsData = incidentsRes.data;
+            console.log('📦 Raw responses:', { usersRes, incidentsRes, statsRes });
+
+            // Extract data from responses - backend returns { users: [], pagination: {} }
+            const usersData = usersRes.data.users || usersRes.data || [];
+            const incidentsData = incidentsRes.data.incidents || incidentsRes.data || [];
             const statsData = statsRes.data;
 
             console.log('👥 Users loaded:', usersData);
@@ -102,7 +105,7 @@ export default function AdminDashboard() {
             }
 
             setUsers(Array.isArray(usersData) ? usersData : []);
-            setIncidents(Array.isArray(incidentsData) ? incidentsData : incidentsData.incidents || []);
+            setIncidents(Array.isArray(incidentsData) ? incidentsData : []);
 
             setStats({
                 totalIncidents: statsData?.incidents?.total || 0,
