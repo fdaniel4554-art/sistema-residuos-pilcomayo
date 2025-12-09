@@ -50,15 +50,15 @@ export default function AdminDashboard() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
                 const [usersRes, incidentsRes, statsRes] = await Promise.all([
-                    fetch(`${apiUrl}/users`, {
+                    fetch(`${apiUrl}/api/users`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     }),
-                    fetch(`${apiUrl}/incidents`, {
+                    fetch(`${apiUrl}/api/incidents`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     }),
-                    fetch(`${apiUrl}/stats`, {
+                    fetch(`${apiUrl}/api/stats/general`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     })
                 ]);
