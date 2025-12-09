@@ -70,12 +70,14 @@ export default function AdminDashboard() {
                 // Ensure users is an array
                 setUsers(Array.isArray(usersData) ? usersData : []);
                 setIncidents(Array.isArray(incidentsData) ? incidentsData : []);
-                setStats(statsData || {
-                    totalIncidents: 0,
-                    pendingIncidents: 0,
-                    resolvedIncidents: 0,
-                    totalUsers: 0,
-                    activeBrigades: 0
+
+                // Parse stats from backend structure
+                setStats({
+                    totalIncidents: statsData?.incidents?.total || 0,
+                    pendingIncidents: statsData?.incidents?.pending || 0,
+                    resolvedIncidents: statsData?.incidents?.resolved || 0,
+                    totalUsers: statsData?.users?.total || 0,
+                    activeBrigades: statsData?.users?.brigades || 0
                 });
             } catch (error) {
                 console.error('Error loading data:', error);
