@@ -41,10 +41,21 @@ export default function CiudadanoDashboard() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
-            // Filtrar solo los reportes del usuario actual
-            setMyReports(data.slice(0, 5)); // Últimos 5 reportes
+            console.log('Fetched reports:', data);
+
+            // Fix: ensure data is an array before slicing
+            if (Array.isArray(data)) {
+                setMyReports(data.slice(0, 5)); // Últimos 5 reportes
+            } else if (data && typeof data === 'object' && data.incidents && Array.isArray(data.incidents)) {
+                // If the backend returns { incidents: [...] }
+                setMyReports(data.incidents.slice(0, 5));
+            } else {
+                console.warn('API did not return an array of incidents:', data);
+                setMyReports([]);
+            }
         } catch (error) {
             console.error('Error al cargar reportes:', error);
+            setMyReports([]);
         }
     };
 
@@ -371,25 +382,32 @@ export default function CiudadanoDashboard() {
                             </div>
 
                             {/* Botón Submit */}
-                            <button
-                                type="submit"
-                                disabled={submitting || !location || (!selectedImage && !comment)}
-                                className="w-full flex justify-center items-center gap-2 py-4 px-6 border border-transparent rounded-xl shadow-lg text-lg font-bold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95"
-                            >
-                                {submitting ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                        Enviando reporte...
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                        </svg>
-                                        🚀 Enviar Reporte
-                                    </>
+                            <div className="pt-4">
+                                {!location && (
+                                    <p className="text-red-500 text-sm mb-2 text-center font-medium animate-pulse">
+                                        ⚠️ Por favor, permite el acceso a tu ubicación para enviar el reporte.
+                                    </p>
                                 )}
-                            </button>
+                                <button
+                                    type="submit"
+                                    disabled={submitting || !location || (!selectedImage && !comment)}
+                                    className="w-full flex justify-center items-center gap-2 py-4 px-6 border border-transparent rounded-xl shadow-lg text-lg font-bold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95"
+                                >
+                                    {submitting ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                            Enviando reporte...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                            </svg>
+                                            🚀 Enviar Reporte
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </form>
                     </div>
 
