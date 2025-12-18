@@ -193,7 +193,7 @@ export default function CiudadanoDashboard() {
                 <div className="bg-gradient-to-r from-green-600 to-emerald-600 shadow-lg">
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                         <h1 className="text-4xl font-bold text-white drop-shadow-lg">
-                            👤 Bienvenido, {user?.name || 'Ciudadano'}
+                            👤 Bienvenido, {user?.name || 'Ciudadano'} <span className="text-sm opacity-50 block sm:inline">(v2.1 - Smart AI Enabled)</span>
                         </h1>
                         <p className="mt-2 text-lg text-green-50">
                             Ayúdanos a mantener limpio nuestro distrito
