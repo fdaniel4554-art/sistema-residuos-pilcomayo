@@ -34,7 +34,16 @@ class AnalyzeResponse(BaseModel):
     severity: str
     confidence: float
     priority: int
+    description: Optional[str] = None
     details: Optional[dict] = None
+
+class AnalyzeTextRequest(BaseModel):
+    text: str
+
+class AnalyzeTextResponse(BaseModel):
+    wasteType: str
+    severity: str
+    priority: int
 
 # ==========================================
 # RUTAS
@@ -89,6 +98,36 @@ async def batch_analyze(image_urls: list[str]):
             status_code=500,
             detail=f"Error en análisis por lote: {str(e)}"
         )
+
+@app.post("/analyze-text", response_model=AnalyzeTextResponse)
+async def analyze_text(request: AnalyzeTextRequest):
+    """
+    Analiza el texto de un reporte ciudadano para clasificarlo
+    """
+    text = request.text.lower()
+    
+    # Clasificación simple por palabras clave (Simulando IA entrenada)
+    waste_type = "MIXED"
+    severity = "MEDIUM"
+    priority = 1
+    
+    if any(word in text for word in ["hospital", "quimico", "peligroso", "jeringa"]):
+        waste_type = "HAZARDOUS"
+        severity = "HIGH"
+        priority = 3
+    elif any(word in text for word in ["escombro", "construccion", "ladrillo"]):
+        waste_type = "CONSTRUCTION"
+        priority = 2
+    elif any(word in text for word in ["organico", "comida", "fruta"]):
+        waste_type = "ORGANIC"
+    elif any(word in text for word in ["plastico", "botella"]):
+        waste_type = "PLASTIC"
+        
+    return {
+        "wasteType": waste_type,
+        "severity": severity,
+        "priority": priority
+    }
 
 if __name__ == "__main__":
     import uvicorn

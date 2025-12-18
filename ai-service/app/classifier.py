@@ -123,6 +123,49 @@ class WasteClassifier:
         # Determinar severidad basado en densidad de bordes
         severity = self._determine_severity(edge_density, brightness)
         
+        # Determinar prioridad
+        priority = 1
+        if severity == "HIGH": priority = 3
+        elif severity == "MEDIUM": priority = 2
+        
+        return {
+            "wasteType": waste_type,
+            "severity": severity,
+            "confidence": 0.85,
+            "priority": priority,
+            "description": f"Se ha detectado una acumulación de residuos de tipo {waste_type} con severidad {severity}.",
+            "details": {
+                "edge_density": float(edge_density),
+                "brightness": float(brightness)
+            }
+        }
+        
+    def _determine_waste_type(self, h, s, v) -> str:
+        # Colores: Verde (Orgánico), Azul (Plástico), Amarillo/Gris (Otros)
+        green_score = h[40:80].sum()
+        blue_score = h[100:140].sum()
+        
+        if green_score > blue_score and green_score > 0.1:
+            return "ORGANIC"
+        elif blue_score > green_score and blue_score > 0.1:
+            return "PLASTIC"
+        return "MIXED"
+        
+    def _determine_severity(self, density, brightness) -> str:
+        if density > 0.05: return "HIGH"
+        if density > 0.02: return "MEDIUM"
+        return "LOW"
+
+    async def _classify_google_vision(self, image_url: str) -> Dict[str, Any]:
+        # Simulación por ahora si no hay API Key
+        return {
+            "wasteType": "MIXED",
+            "severity": "MEDIUM",
+            "confidence": 0.9,
+            "priority": 1,
+            "description": "Análisis vía Google Vision (Simulado)"
+        }
+
     def _classify_tensorflow(self, image: np.ndarray) -> Dict[str, Any]:
         """Clasificación usando TensorFlow"""
         # TODO: Implementar predicción con modelo TensorFlow

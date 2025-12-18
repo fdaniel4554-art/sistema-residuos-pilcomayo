@@ -74,9 +74,88 @@ const createIncident = async (req, res) => {
                     data: updateData
                 });
             } catch (aiError) {
-                console.error('Error en clasificación IA:', aiError.message);
+                console.error('Error en clasificación IA (Imagen):', aiError.message);
                 // Continuar sin clasificación IA
             }
+        } else if (description) {
+            // Si NO hay imagen pero SI hay descripción, enviar a análisis de texto
+            try {
+                const aiResponse = await axios.post(
+                    `${process.env.AI_SERVICE_URL}/analyze-text`,
+                    { text: description },
+                    { timeout: 5000 }
+                );
+
+                await prisma.incident.update({
+                    where: { id: incident.id },
+                    data: {
+                        aiWasteType: aiResponse.data.wasteType,
+                        aiSeverity: aiResponse.data.severity,
+                        aiPriority: aiResponse.data.priority
+                    }
+                });
+            } catch (aiTextError) {
+                console.error('Error en clasificación IA (Texto):', aiTextError.message);
+            }
+        }
+
+        // ==========================================
+        // SMART AUTO-ASIGNACIÓN (Proximidad)
+        // ==========================================
+        try {
+            // Buscar todas las brigadas activas
+            const activeBrigades = await prisma.user.findMany({
+                where: {
+                    role: 'BRIGADE',
+                    active: true,
+                    latitude: { not: null },
+                    longitude: { not: null }
+                }
+            });
+
+            let bestBrigade = null;
+
+            if (activeBrigades.length > 0) {
+                // Calcular la más cercana
+                let minDistance = Infinity;
+
+                activeBrigades.forEach(brigade => {
+                    const dist = Math.sqrt(
+                        Math.pow(brigade.latitude - parseFloat(latitude), 2) +
+                        Math.pow(brigade.longitude - parseFloat(longitude), 2)
+                    );
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        bestBrigade = brigade;
+                    }
+                });
+            } else {
+                // Fallback: Cualquier brigada activa aunque no tenga ubicación
+                bestBrigade = await prisma.user.findFirst({
+                    where: { role: 'BRIGADE', active: true }
+                });
+            }
+
+            if (bestBrigade) {
+                // Crear asignación
+                await prisma.assignment.create({
+                    data: {
+                        incidentId: incident.id,
+                        assignedToId: bestBrigade.id,
+                        notes: 'Asignación inteligente por cercanía'
+                    }
+                });
+
+                // Actualizar estado del incidente
+                await prisma.incident.update({
+                    where: { id: incident.id },
+                    data: { status: 'ASSIGNED' }
+                });
+
+                console.log(`Incidencia ${incident.id} auto-asignada a ${bestBrigade.name} (Smart)`);
+            }
+        } catch (assignError) {
+            console.error('Error en auto-asignación inteligente:', assignError.message);
         }
 
         // Log de actividad
@@ -93,7 +172,10 @@ const createIncident = async (req, res) => {
 
         res.status(201).json({
             message: 'Incidencia creada exitosamente',
-            incident
+            incident: {
+                ...incident,
+                assigned: true // Informar al frontend que se intentó asignar
+            }
         });
 
     } catch (error) {

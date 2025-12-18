@@ -84,53 +84,83 @@ export default function CiudadanoDashboard() {
         setError('');
         setSuccess('');
 
-        if (!selectedImage) {
-            setError('Por favor, sube una foto del problema');
+        if (!location) {
+            setError('No se pudo obtener tu ubicación. Por favor, activa el GPS');
             return;
         }
 
-        if (!location) {
-            setError('No se pudo obtener tu ubicación. Por favor, activa el GPS');
+        if (!selectedImage && !comment) {
+            setError('Por favor, agrega una descripción o una foto del problema');
             return;
         }
 
         setSubmitting(true);
 
         try {
-            // Crear FormData para enviar imagen
-            const formData = new FormData();
-            formData.append('image', selectedImage);
-            formData.append('latitude', location.lat.toString());
-            formData.append('longitude', location.lng.toString());
-            if (comment) {
-                formData.append('description', comment);
+            let imageUrl = '';
+
+            // 1. Si hay imagen, subirla primero al endpoint de upload
+            if (selectedImage) {
+                const uploadFormData = new FormData();
+                uploadFormData.append('image', selectedImage);
+
+                const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: uploadFormData
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error('Error al subir la imagen');
+                }
+
+                const uploadData = await uploadResponse.json();
+                imageUrl = uploadData.imageUrl;
             }
+
+            // 2. Enviar los datos del reporte (con o sin imagen) como JSON
+            const reportPayload = {
+                description: comment || 'Reporte ciudadano sin descripción',
+                latitude: location.lat,
+                longitude: location.lng,
+                address,
+                imageUrl: imageUrl || null
+            };
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/incidents`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
-                body: formData
+                body: JSON.stringify(reportPayload)
             });
 
             if (response.ok) {
-                setSuccess('¡Reporte enviado exitosamente! La IA está analizando tu imagen...');
+                const data = await response.json();
+                setSuccess(imageUrl
+                    ? '¡Reporte enviado exitosamente! La IA está analizando tu imagen y se ha asignado una brigada.'
+                    : '¡Reporte enviado exitosamente! Se ha asignado una brigada para atender tu solicitud.');
+
                 // Limpiar formulario
                 setSelectedImage(null);
                 setImagePreview('');
                 setComment('');
+
                 // Recargar reportes
                 setTimeout(() => {
                     fetchMyReports();
                     setSuccess('');
                 }, 3000);
             } else {
-                setError('Error al enviar el reporte. Intenta nuevamente.');
+                const errorData = await response.json();
+                setError(errorData.error || 'Error al enviar el reporte. Intenta nuevamente.');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error:', error);
-            setError('Error al enviar el reporte. Verifica tu conexión.');
+            setError(error.message || 'Error al enviar el reporte. Verifica tu conexión.');
         } finally {
             setSubmitting(false);
         }
@@ -190,68 +220,96 @@ export default function CiudadanoDashboard() {
                             </div>
                         )}
 
+                        <div className="flex gap-4 mb-8">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSelectedImage(null);
+                                    setImagePreview('');
+                                }}
+                                className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${!selectedImage && !imagePreview ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                            >
+                                ✍️ Reporte Texto
+                            </button>
+                            <button
+                                type="button"
+                                className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${selectedImage || imagePreview ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                            >
+                                📸 Reporte con Foto
+                            </button>
+                        </div>
+
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Upload de Imagen */}
-                            <div>
-                                <label className="block text-base font-bold text-gray-900 mb-3">
-                                    📷 Foto del Problema *
-                                </label>
-                                <div className="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-400 bg-gray-50 hover:bg-green-50 transition-all">
-                                    <div className="space-y-1 text-center">
-                                        {imagePreview ? (
-                                            <div className="relative">
-                                                <img
-                                                    src={imagePreview}
-                                                    alt="Preview"
-                                                    className="mx-auto h-64 w-auto rounded-lg"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setSelectedImage(null);
-                                                        setImagePreview('');
-                                                    }}
-                                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <svg
-                                                    className="mx-auto h-12 w-12 text-gray-400"
-                                                    stroke="currentColor"
-                                                    fill="none"
-                                                    viewBox="0 0 48 48"
-                                                >
-                                                    <path
-                                                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                                        strokeWidth={2}
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
+                            {/* Upload de Imagen (Solo si se elige o ya hay una) */}
+                            {(selectedImage || imagePreview || true) && (
+                                <div className={`${(!selectedImage && !imagePreview) ? 'hidden' : 'block'}`}>
+                                    <label className="block text-base font-bold text-gray-900 mb-3">
+                                        📷 Foto del Problema
+                                    </label>
+                                    <div className="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-400 bg-gray-50 hover:bg-green-50 transition-all">
+                                        <div className="space-y-1 text-center">
+                                            {imagePreview ? (
+                                                <div className="relative">
+                                                    <img
+                                                        src={imagePreview}
+                                                        alt="Preview"
+                                                        className="mx-auto h-64 w-auto rounded-lg"
                                                     />
-                                                </svg>
-                                                <div className="flex text-sm text-gray-600 justify-center">
-                                                    <label className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500">
-                                                        <span>Subir foto</span>
-                                                        <input
-                                                            type="file"
-                                                            className="sr-only"
-                                                            accept="image/*"
-                                                            onChange={handleImageChange}
-                                                            capture="environment"
-                                                        />
-                                                    </label>
-                                                    <p className="pl-1">o arrastra aquí</p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedImage(null);
+                                                            setImagePreview('');
+                                                        }}
+                                                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
                                                 </div>
-                                                <p className="text-xs text-gray-500">PNG, JPG, GIF hasta 10MB</p>
-                                            </>
-                                        )}
+                                            ) : (
+                                                <>
+                                                    <svg
+                                                        className="mx-auto h-12 w-12 text-gray-400"
+                                                        stroke="currentColor"
+                                                        fill="none"
+                                                        viewBox="0 0 48 48"
+                                                    >
+                                                        <path
+                                                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                                            strokeWidth={2}
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                        />
+                                                    </svg>
+                                                    <div className="flex text-sm text-gray-600 justify-center">
+                                                        <label className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500">
+                                                            <span>Subir foto</span>
+                                                            <input
+                                                                type="file"
+                                                                className="sr-only"
+                                                                accept="image/*"
+                                                                onChange={handleImageChange}
+                                                                capture="environment"
+                                                            />
+                                                        </label>
+                                                        <p className="pl-1">o arrastra aquí</p>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500">PNG, JPG, GIF hasta 10MB</p>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Mensaje de ayuda si no hay foto */}
+                            {!selectedImage && !imagePreview && (
+                                <div className="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm">
+                                    💡 <strong>Modo Reporte Texto:</strong> Describe el problema detalladamente para que la IA lo clasifique y asigne una brigada rápidamente.
+                                </div>
+                            )}
 
                             {/* Ubicación */}
                             <div>
@@ -315,7 +373,7 @@ export default function CiudadanoDashboard() {
                             {/* Botón Submit */}
                             <button
                                 type="submit"
-                                disabled={submitting || !selectedImage || !location}
+                                disabled={submitting || !location || (!selectedImage && !comment)}
                                 className="w-full flex justify-center items-center gap-2 py-4 px-6 border border-transparent rounded-xl shadow-lg text-lg font-bold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95"
                             >
                                 {submitting ? (
